@@ -1,4 +1,14 @@
-import axios from 'axios';
+
+
+
+export interface IUserInfo {
+    id: number,
+    email: string,
+    name: string,
+    role: string[],
+
+}
+
 
 export interface ILoginRequest {
     email: string;
@@ -12,33 +22,45 @@ export interface ILoginResponse {
     refreshExpire: number;
 }
 
-const header = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-};
+
 
 export function Service() {
-    const instance = axios.create({
-        baseURL: '/api/v1/auth',
-        headers: header,
-    });
+
+    const header = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+    };
 
     return {
-        login: async (data: ILoginRequest) => {
-            try {
-                const response = await instance.post('/login', data);
-                return response.data;
-            } catch (error) {
-                throw new Error(`Error during login: ${error}`);
-            }
+        getUser: async () => {
+            return await fetch("/api/v1/auth/user", {
+                method: 'GET',
+                headers: header,
+
+            });
+        },
+        login: async (request: ILoginRequest) => {
+            return  await fetch("/api/v1/auth/login", {
+                method: 'POST',
+                headers: header,
+                body: JSON.stringify(request),
+            });
+        },
+        logout: async () => {
+            return  await fetch("/api/v1/auth/logout", {
+                method: 'POST',
+                headers: header,
+            });
+
         },
         refresh: async (refreshToken: string) => {
-            try {
-                const response = await instance.post('/token/refresh', {refreshToken});
-                return response.data;
-            } catch (error) {
-                throw new Error(`Error during refresh: ${error}`);
-            }
-        },
+            return await fetch("/api/v1/auth/token/refresh?refreshToken=" + refreshToken, {
+                method: 'POST',
+                headers: header,
+            });
+        }
     };
 }
+
+

@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error
 export function Loading({isLoading}) {
     return (
         <>

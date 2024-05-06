@@ -1,33 +1,41 @@
 import {useState} from "react";
-import {ILoginRequest, ILoginResponse, Service} from "../../api/Service.tsx";
+import {ILoginRequest} from "../../api/Service.tsx";
 import {MdOutlineMailOutline} from "react-icons/md";
 import {VscLock} from "react-icons/vsc";
 import 'flowbite';
 import img from './../../assets/user-login.png';
+import {useAuthentication} from "../../hooks/AuthContext.tsx";
+import toast from "react-hot-toast";
+import {Loading} from "../layout/Loading.tsx";
 
 export default function Login() {
+    const [loading, setLoading] = useState<boolean>(false);
+    const [, setInvalid] = useState<boolean>(false);
     const [username, setUsername] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const api = Service();
-    const handleSubmit = async () => {
-        const login: ILoginRequest = {email: username, password: password};
-        await api.login(login).then(
-            response => {
-                handleSuccess(response);
-            }
-        );
-    }
 
-    const handleSuccess = (response: ILoginResponse) => {
-        localStorage.setItem('accessToken', response.accessToken);
-        localStorage.setItem('refreshToken', response.refreshToken);
-        localStorage.setItem('accessExpire', response.accessExpire.toString());
-        localStorage.setItem('refreshExpire', response.refreshExpire.toString());
-        location.href = '/';
+    const {login} = useAuthentication();
+
+    const handleSubmit = async () => {
+        if (loading) return;
+        setLoading(true);
+        const data: ILoginRequest = {email: username, password: password};
+        login(data).then(
+            () => {
+                setLoading(false);
+
+            }
+        )
+            .catch(e => {
+                toast.error(e.message);
+                setInvalid(true);
+                setLoading(false);
+            })
     }
 
     return (
         <section className={'w-screen h-screen bg-white flex flex-row p-3'}>
+            <Loading isLoading={loading}/>
             <div
                 className={'w-2/5 h-[100%] bg-white text-center py-[5%] px-[8%] flex flex-col gap-5 justify-center items-center'}>
                 <div className={'w-full h-auto text-center flex flex-col gap-2 '}>
@@ -63,11 +71,17 @@ export default function Login() {
                     </div>
                     <button type="button"
                             onClick={handleSubmit}
-                            className="text-white mb-2 text-center w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Login
+                            className="text-white mb-2 text-center w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        {
+                            loading ? 'Loading...' : 'Login'
+                        }
                     </button>
                     <p className={'text-sm mr-1'}>Forgot password? <a href="#" className={'underline text-blue-600'}>click
                         here</a></p>
                 </form>
+                <div className={'footer mt-14 '}>
+                    Copyright &copy; 2024. <a href="#" className={'underline text-blue-600 text-sm font-semibold'}>All right reserved</a>
+                </div>
             </div>
             <div
                 className={'description w-3/5 h-[100%] flex flex-col items-center justify-center bg-gradient-to-tl from-blue-600 to-blue-300 rounded-xl'}>

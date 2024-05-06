@@ -1,17 +1,22 @@
 import './App.css'
-import Dashboard from "./components/Dashboard.tsx";
+import {useAuthentication} from "./hooks/AuthContext.tsx";
 import Login from "./components/login/Login.tsx";
-import {BrowserRouter, Route, Routes} from "react-router-dom";
+import Layout from "./components/layout/Layout.tsx";
+
 
 function App() {
 
+    const {logined} = useAuthentication();
+
+
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path={'/login'} element={<Login/>}/>
-                <Route path={'/'} element={<Dashboard/>}/>
-            </Routes>
-        </BrowserRouter>
+
+        <>
+            {!logined ?
+                (<Login/>) :
+                (<Layout/>)
+            }
+        </>
     )
 }
 
