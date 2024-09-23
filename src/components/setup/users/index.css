@@ -1,0 +1,6 @@
+.button-browse:has(> img:hover){
+    @apply bg-blue-800;
+}
+.button-browse:hover{
+    @apply bg-blue-800;
+}

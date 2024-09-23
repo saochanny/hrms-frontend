@@ -1,5 +1,5 @@
-// @ts-expect-error
-export function Loading({isLoading}) {
+
+export function Loading({isLoading}:{isLoading:boolean}) {
     return (
         <>
             {isLoading ? (

@@ -3,23 +3,38 @@ import {ILoginRequest} from "../../api/Service.tsx";
 import {MdOutlineMailOutline} from "react-icons/md";
 import {VscLock} from "react-icons/vsc";
 import 'flowbite';
+import * as yup from "yup";
 import img from './../../assets/user-login.png';
 import {useAuthentication} from "../../hooks/AuthContext.tsx";
 import toast from "react-hot-toast";
 import {Loading} from "../layout/Loading.tsx";
+import {useForm} from "react-hook-form";
+import {yupResolver} from "@hookform/resolvers/yup";
+import "./login.css";
 
 export default function Login() {
     const [loading, setLoading] = useState<boolean>(false);
-    const [, setInvalid] = useState<boolean>(false);
-    const [username, setUsername] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
+    const [invalid, setInvalid] = useState<boolean>(false);
+
+    const schema = yup.object().shape({
+        email: yup.string().email('The email field is invalid.').required('The email field is required.').required(),
+        password: yup.string().required('The password field is required.')
+    })
 
     const {login} = useAuthentication();
 
-    const handleSubmit = async () => {
+    const {register, handleSubmit, formState: {errors}} = useForm({
+        resolver: yupResolver(schema)
+    })
+
+    function handleChange() {
+        setInvalid(false);
+    }
+
+    const onSubmit = async (data: ILoginRequest) => {
         if (loading) return;
         setLoading(true);
-        const data: ILoginRequest = {email: username, password: password};
+        // const data: ILoginRequest = {email: username, password: password};
         login(data).then(
             () => {
                 setLoading(false);
@@ -44,18 +59,19 @@ export default function Login() {
                     </h1>
                     <p className={'w-full text-sm text-gray-500 font-medium'}>Send, spend and save smarter</p>
                 </div>
-                <form className="w-full text-left">
+                <form className="w-full text-left" onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-5">
                         <label htmlFor="email"
                                className="flex flex-row items-center gap-1 mb-2 text-sm font-medium text-gray-900 dark:text-white">
                             <MdOutlineMailOutline className={'text-[18px] font-bold text-blue-800'}/> Email
                             Address</label>
                         <input type="email" id="email"
-                               onChange={(e) => {
-                                   setUsername(e.target.value)
-                               }}
-                               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                               required/>
+                               {...register('email')}
+                               placeholder={'Enter your email address'}
+                               onInput={() => handleChange()}
+                               className={errors.email || invalid ? 'invalid' : 'input'}
+                        />
+                        {errors.email && <p className={'errorMessage'}>{errors.email.message}</p>}
                     </div>
                     <div className="mb-5">
                         <label htmlFor="password"
@@ -63,14 +79,16 @@ export default function Login() {
                             <VscLock className={'text-[18px] font-bold text-blue-800'}/>
                             Password</label>
                         <input type="password" id="password"
-                               onChange={(e) => {
-                                   setPassword(e.target.value)
-                               }}
-                               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                               required/>
+                               placeholder={'Enter your password'}
+                               {...register('password')}
+                               onInput={() => handleChange()}
+                               className={errors.password || invalid ? 'invalid' : 'input'}
+                        />
+                        {errors.password && <p className={'errorMessage'}>{errors.password.message}</p>}
                     </div>
-                    <button type="button"
-                            onClick={handleSubmit}
+                    <button type="submit"
+                            disabled={loading}
+                        // onClick={handleSubmit}
                             className="text-white mb-2 text-center w-full bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                         {
                             loading ? 'Loading...' : 'Login'
@@ -80,7 +98,8 @@ export default function Login() {
                         here</a></p>
                 </form>
                 <div className={'footer mt-14 '}>
-                    Copyright &copy; 2024. <a href="#" className={'underline text-blue-600 text-sm font-semibold'}>All right reserved</a>
+                    Copyright &copy; 2024. <a href="#" className={'underline text-blue-600 text-sm font-semibold'}>All
+                    right reserved</a>
                 </div>
             </div>
             <div

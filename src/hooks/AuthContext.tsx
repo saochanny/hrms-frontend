@@ -2,16 +2,15 @@ import {createContext, JSX, useContext, useEffect, useMemo, useState} from "reac
 import {ILoginRequest, ILoginResponse, IUserInfo, Service} from "../api/Service.tsx";
 
 interface AuthContextType {
-    user: () => Promise<IUserInfo>;
+    user: IUserInfo | null;
     login: (request: ILoginRequest) => Promise<IUserInfo>;
     logined: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
-    user: async () => ({} as IUserInfo),
-    login: async (request: ILoginRequest) => {
-        console.log(request);
-        return {} as IUserInfo;
+    user: null, // Initialize with null instead of a function
+    login: async () => {
+        throw new Error("Login function is not implemented");
     },
     logined: false,
 });
@@ -23,7 +22,7 @@ export const AuthProvider = ({children}: { children: JSX.Element | JSX.Element[]
 
     const getUser = async () => {
         if (user) {
-            return await Promise.resolve(user);
+            return user;
         } else {
             const response = await Service().getUser();
             if (response.ok) {
@@ -36,7 +35,7 @@ export const AuthProvider = ({children}: { children: JSX.Element | JSX.Element[]
                 setUser(null);
             }
         }
-        return await Promise.resolve({} as IUserInfo);
+        return {} as IUserInfo;
     };
 
     const login = async (request: ILoginRequest) => {
@@ -63,9 +62,15 @@ export const AuthProvider = ({children}: { children: JSX.Element | JSX.Element[]
         if (result) {
             storeToLocalStorage(result);
             location.reload();
-            return await getUser();
+            // return await getUser();
+            const userinfo= await getUser();
+            if(userinfo){
+                setUser(userinfo);
+                setLogined(true);
+            }
+            return userinfo;
         }
-        return await Promise.resolve({} as IUserInfo);
+        return {} as IUserInfo;
     };
 
     const storeToLocalStorage = (response: ILoginResponse) => {
@@ -111,11 +116,11 @@ export const AuthProvider = ({children}: { children: JSX.Element | JSX.Element[]
 
     const provider = useMemo(
         () => ({
-            user: getUser,
+            user,
             login,
             logined,
         }),
-        [logined]
+        [user, logined]
     );
 
     return <AuthContext.Provider value={provider}>{checked ? children : <div>...</div>}</AuthContext.Provider>;
